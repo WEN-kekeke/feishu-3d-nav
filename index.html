@@ -20,7 +20,7 @@
             background-repeat: no-repeat;
             cursor: pointer;
         }
-        /* 输入框固定居中，不会移位/缩小 */
+        /* 完整输入框：默认居中显示 */
         .search-box {
             position: fixed;
             top: 50%;
@@ -30,11 +30,41 @@
             padding: 20px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 100; /* 始终在最上层 */
+            z-index: 100;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            width: 350px; /* 固定宽度，不会缩小 */
+            width: 350px;
+            transition: all 0.5s ease;
+        }
+        /* 查询后收缩为右上角小标识 */
+        .search-box.mini {
+            top: 20px;
+            right: 20px;
+            left: auto;
+            transform: none;
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+        }
+        /* 收缩后隐藏输入框和文字，只留图标 */
+        .search-box.mini label,
+        .search-box.mini #nameInput,
+        .search-box.mini #searchBtn {
+            display: none;
+        }
+        /* 小标识的图标 */
+        .mini-icon {
+            display: none;
+            font-size: 24px;
+            color: #007bff;
+            cursor: pointer;
+        }
+        .search-box.mini .mini-icon {
+            display: block;
         }
         .search-box label {
             font-size: 18px;
@@ -46,7 +76,7 @@
             padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            width: 100%; /* 占满输入框宽度 */
+            width: 100%;
             font-size: 16px;
             outline: none;
             text-align: center;
@@ -85,7 +115,6 @@
             min-width: 300px;
             text-align: center;
         }
-        /* 结果框固定到左上角的样式（不会影响输入框） */
         .result.fixed {
             top: 20px;
             left: 20px;
@@ -94,8 +123,8 @@
         }
         #mascot {
             position: absolute;
-            left: 100px;   
-            top: 800px;    
+            left: 150px;   
+            top: 600px;    
             width: 60px;
             height: 60px;
             transition: all 1.5s ease;
@@ -111,8 +140,9 @@
 </head>
 <body onclick="fixResultBox()">
     <div class="container">
-        <!-- 输入框：固定居中，不会移位/缩小 -->
+        <!-- 输入框容器：包含完整输入框和小标识 -->
         <div class="search-box" id="searchBox">
+            <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
             <label>请输入您的名字</label>
             <input type="text" id="nameInput" placeholder="例如：张三" autocomplete="off">
             <button id="searchBtn">查询桌号</button>
@@ -130,12 +160,12 @@
         const searchBtn = document.getElementById('searchBtn');
         const resultBox = document.getElementById('resultBox');
         const mascot = document.getElementById('mascot');
-        const searchBox = document.getElementById('searchBox'); // 输入框容器
+        const searchBox = document.getElementById('searchBox');
 
         let staffTable = {};
         let tableCoords = {};
 
-        // 加载数据
+        // 加载人员和坐标数据
         async function loadData() {
             try {
                 const [staffRes, coordsRes] = await Promise.all([
@@ -149,50 +179,25 @@
             }
         }
 
-        // 重置：输入框回到中间，吉祥物复位，结果框隐藏
-        function resetAll() {
-            // 输入框强制回到页面中间
-            searchBox.style.top = '50%';
-            searchBox.style.left = '50%';
-            searchBox.style.transform = 'translate(-50%, -50%)';
-            
-            // 吉祥物复位
-            mascot.style.left = '100px';
-            mascot.style.top = '800px';
-            
-            // 结果框隐藏并移除固定样式
-            resultBox.style.display = 'none';
-            resultBox.classList.remove('fixed');
-            
-            // 清空输入框
-            nameInput.value = '';
+        // 收缩输入框为右上角小标识
+        function shrinkSearchBox() {
+            searchBox.classList.add('mini');
+            // 阻止冒泡，避免触发背景点击事件
+            searchBox.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        // 查询桌号逻辑
-        async function searchTable() {
-            const name = nameInput.value.trim();
-            if (!name) {
-                showResult('请输入您的名字', 'error');
-                return;
-            }
-
-            const table = staffTable[name];
-            if (!table) {
-                showResult(`未找到「${name}」小伙伴的桌号信息`, 'error');
-                resetAll();
-                return;
-            }
-
-            const coords = tableCoords[table];
-            if (!coords) {
-                showResult(`「${name}」小伙伴的桌号${table}暂无坐标配置`, 'error');
-                resetAll();
-                return;
-            }
-
-            showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
-            mascot.style.left = `${coords.x}px`;
-            mascot.style.top = `${coords.y}px`;
+        // 展开小标识为完整输入框
+        function expandSearchBox() {
+            searchBox.classList.remove('mini');
+            searchBox.style.transform = 'translate(-50%, -50%)';
+            nameInput.focus(); // 自动聚焦输入框
+            // 清空输入框和结果
+            nameInput.value = '';
+            resultBox.style.display = 'none';
+            resultBox.classList.remove('fixed');
+            // 吉祥物复位
+            mascot.style.left = '150px';
+            mascot.style.top = '600px';
         }
 
         // 显示结果提示
@@ -203,23 +208,52 @@
             resultBox.classList.remove('fixed');
         }
 
-        // 点击背景：仅固定结果框到左上角，输入框不动
+        // 点击背景：固定结果框到左上角
         function fixResultBox() {
             if (resultBox.style.display === 'block') {
                 resultBox.classList.add('fixed');
             }
         }
 
+        // 核心查询逻辑
+        async function searchTable() {
+            const name = nameInput.value.trim();
+            if (!name) {
+                showResult('请输入您的名字', 'error');
+                return;
+            }
+
+            const table = staffTable[name];
+            if (!table) {
+                showResult(`未找到「${name}」小伙伴的桌号信息`, 'error');
+                return;
+            }
+
+            const coords = tableCoords[table];
+            if (!coords) {
+                showResult(`「${name}」小伙伴的桌号${table}暂无坐标配置`, 'error');
+                return;
+            }
+
+            // 显示结果 + 移动吉祥物
+            showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
+            mascot.style.left = `${coords.x}px`;
+            mascot.style.top = `${coords.y}px`;
+            
+            // 查询成功后，收缩输入框为右上角小标识
+            shrinkSearchBox();
+        }
+
         // 绑定事件
         searchBtn.addEventListener('click', searchTable);
+        // 回车查询
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') searchTable();
         });
-        // 聚焦输入框/点击输入框时，强制重置到中间
-        nameInput.addEventListener('focus', resetAll);
-        searchBox.addEventListener('click', (e) => {
-            e.stopPropagation(); // 阻止点击输入框触发背景的fixResultBox
-            resetAll();
+        // 点击小标识展开输入框（阻止冒泡）
+        document.querySelector('.mini-icon').addEventListener('click', (e) => {
+            e.stopPropagation();
+            expandSearchBox();
         });
 
         // 页面加载完成后加载数据
