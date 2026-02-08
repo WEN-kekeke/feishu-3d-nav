@@ -20,7 +20,7 @@
             background-repeat: no-repeat;
             cursor: pointer;
         }
-        /* 完整输入框：默认居中显示 */
+        /* 完整输入框：默认居中 */
         .search-box {
             position: fixed;
             top: 50%;
@@ -123,8 +123,8 @@
         }
         #mascot {
             position: absolute;
-            left: 150px;   
-            top: 600px;    
+            left: 8%;
+            top: 85%;
             width: 60px;
             height: 60px;
             transition: all 1.5s ease;
@@ -140,7 +140,6 @@
 </head>
 <body onclick="fixResultBox()">
     <div class="container">
-        <!-- 输入框容器：包含完整输入框和小标识 -->
         <div class="search-box" id="searchBox">
             <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
             <label>请输入您的名字</label>
@@ -162,18 +161,61 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        let staffTable = {};
-        let tableCoords = {};
+        // 所有桌号的相对坐标（百分比），完全不受缩放影响
+        const tableCoords = {
+            "1": {"x": "50%", "y": "35%"},
+            "2": {"x": "58%", "y": "38%"},
+            "3": {"x": "57%", "y": "42%"},
+            "4": {"x": "35%", "y": "38%"},
+            "5": {"x": "36%", "y": "42%"},
+            "6": {"x": "28%", "y": "34%"},
+            "7": {"x": "26%", "y": "38%"},
+            "8": {"x": "66%", "y": "34%"},
+            "9": {"x": "68%", "y": "38%"},
+            "10": {"x": "70%", "y": "42%"},
+            "11": {"x": "62%", "y": "46%"},
+            "12": {"x": "51%", "y": "46%"},
+            "13": {"x": "38%", "y": "46%"},
+            "14": {"x": "30%", "y": "46%"},
+            "15": {"x": "22%", "y": "46%"},
+            "16": {"x": "20%", "y": "52%"},
+            "17": {"x": "30%", "y": "52%"},
+            "18": {"x": "38%", "y": "52%"},
+            "19": {"x": "51%", "y": "52%"},
+            "20": {"x": "62%", "y": "52%"},
+            "21": {"x": "70%", "y": "52%"},
+            "22": {"x": "78%", "y": "58%"},
+            "23": {"x": "68%", "y": "58%"},
+            "24": {"x": "55%", "y": "58%"},
+            "25": {"x": "38%", "y": "58%"},
+            "26": {"x": "30%", "y": "58%"},
+            "27": {"x": "19%", "y": "58%"},
+            "28": {"x": "10%", "y": "58%"},
+            "29": {"x": "25%", "y": "64%"},
+            "30": {"x": "35%", "y": "64%"},
+            "31": {"x": "51%", "y": "64%"},
+            "32": {"x": "68%", "y": "64%"},
+            "33": {"x": "78%", "y": "64%"},
+            "34": {"x": "90%", "y": "70%"},
+            "35": {"x": "76%", "y": "70%"},
+            "36": {"x": "55%", "y": "70%"},
+            "37": {"x": "38%", "y": "70%"},
+            "38": {"x": "20%", "y": "70%"},
+            "39": {"x": "10%", "y": "70%"},
+            "40": {"x": "2%", "y": "70%"},
+            "41": {"x": "18%", "y": "80%"},
+            "42": {"x": "35%", "y": "80%"},
+            "43": {"x": "55%", "y": "80%"},
+            "44": {"x": "78%", "y": "80%"},
+            "45": {"x": "95%", "y": "80%"}
+        };
 
-        // 加载人员和坐标数据
+        // 加载人员名单
+        let staffTable = {};
         async function loadData() {
             try {
-                const [staffRes, coordsRes] = await Promise.all([
-                    fetch('staff_list.json').then(res => res.json()),
-                    fetch('table_coords.json').then(res => res.json())
-                ]);
-                staffTable = staffRes;
-                tableCoords = coordsRes;
+                const res = await fetch('staff_list.json');
+                staffTable = await res.json();
             } catch (e) {
                 showResult('数据加载失败，请稍后重试', 'error');
             }
@@ -182,22 +224,18 @@
         // 收缩输入框为右上角小标识
         function shrinkSearchBox() {
             searchBox.classList.add('mini');
-            // 阻止冒泡，避免触发背景点击事件
             searchBox.addEventListener('click', (e) => e.stopPropagation());
         }
 
         // 展开小标识为完整输入框
         function expandSearchBox() {
             searchBox.classList.remove('mini');
-            searchBox.style.transform = 'translate(-50%, -50%)';
-            nameInput.focus(); // 自动聚焦输入框
-            // 清空输入框和结果
+            nameInput.focus();
             nameInput.value = '';
             resultBox.style.display = 'none';
             resultBox.classList.remove('fixed');
-            // 吉祥物复位
-            mascot.style.left = '150px';
-            mascot.style.top = '600px';
+            mascot.style.left = '8%';
+            mascot.style.top = '85%';
         }
 
         // 显示结果提示
@@ -235,22 +273,20 @@
                 return;
             }
 
-            // 显示结果 + 移动吉祥物
+            // 显示结果 + 移动吉祥物（百分比定位）
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
-            mascot.style.left = `${coords.x}px`;
-            mascot.style.top = `${coords.y}px`;
+            mascot.style.left = coords.x;
+            mascot.style.top = coords.y;
             
-            // 查询成功后，收缩输入框为右上角小标识
+            // 查询成功后收缩输入框
             shrinkSearchBox();
         }
 
         // 绑定事件
         searchBtn.addEventListener('click', searchTable);
-        // 回车查询
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') searchTable();
         });
-        // 点击小标识展开输入框（阻止冒泡）
         document.querySelector('.mini-icon').addEventListener('click', (e) => {
             e.stopPropagation();
             expandSearchBox();
