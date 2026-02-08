@@ -3,193 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>飞书3D导航系统</title>
-    <!-- 飞书调试JS（已保留） -->
-    <script src='https://lf-package-cn.feishucdn.com/obj/feishu-static/op/fe/devtools_frontend/remote-debug-0.0.1-alpha.6.js'></script>
-    <!-- 引入Three.js（3D场景核心依赖，已保留） -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <title>年会桌号查询</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
+            font-family: "微软雅黑", sans-serif;
         }
-
         body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #f5f7fa;
+            background: #f5f5f5;
+            position: relative;
+            min-height: 100vh;
+            background-image: url('meeting_room.jpg');
+            background-size: cover;
+            background-position: center;
         }
-
-        /* 姓名输入面板样式（已保留，适配视频模块） */
-        .name-panel {
-            position: absolute;
-            top: 50%;
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 1982px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 1024px;
+        }
+        .search-box {
+            position: fixed;
+            top: 20px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 400px;
-            padding: 30px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            text-align: center;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        #nameInput {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            font-size: 16px;
+        }
+        #searchBtn {
+            padding: 8px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #searchBtn:hover {
+            background: #0056b3;
+        }
+        .result {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 18px;
+            display: none;
             z-index: 100;
         }
-
-        .name-panel h3 {
-            margin-bottom: 20px;
-            color: #1f2329;
-            font-size: 18px;
-            font-weight: 600;
+        #mascot {
+            position: absolute;
+            left: 100px;
+            top: 800px;
+            width: 60px;
+            height: 60px;
+            transition: all 1.5s ease;
+            z-index: 50;
         }
-
-        .name-panel input {
+        #mascot img {
             width: 100%;
-            height: 44px;
-            padding: 0 15px;
-            margin-bottom: 20px;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .name-panel input:focus {
-            border-color: #2f80ed;
-        }
-
-        .name-panel button {
-            width: 100%;
-            height: 44px;
-            background-color: #2f80ed;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .name-panel button:hover {
-            background-color: #1d6ce6;
-        }
-
-        /* 视频容器样式（新增，适配飞书页面，不挤压原有布局） */
-        .video-container {
-            width: 100%;
-            margin: 0 0 25px 0;
-            text-align: center;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #e1e4e8;
+            height: 100%;
+            object-fit: contain;
         }
     </style>
 </head>
 <body>
-    <!-- 姓名输入面板（新增视频模块在面板内部上方） -->
-    <div class="name-panel" id="namePanel">
-        <!-- 新增：HTML原生视频播放模块（核心） -->
-        <div class="video-container">
-            <video
-                src="meeting-intro.mp4"  <!-- 【重点修改】替换为你的视频文件名（mp4格式最佳） -->
-                width="100%"
-                controls  <!-- 显示播放/暂停/进度条/音量控件（必选，方便操作） -->
-                muted  <!-- 静音（飞书要求：自动播放必须搭配静音，手动播放可取消） -->
-                poster="meeting-cover.jpg"  <!-- 【可选】替换为你的视频封面图文件名（jpg/png格式） -->
-                preload="metadata"  <!-- 预加载视频元数据（加快加载速度，不浪费流量） -->
-            >
-                你的浏览器/飞书不支持视频播放，请更换最新版本重试。
-            </video>
+    <div class="container">
+        <div class="search-box">
+            <input type="text" id="nameInput" placeholder="请输入您的姓名" autocomplete="off">
+            <button id="searchBtn">查询桌号</button>
         </div>
-
-        <h3>请输入您的姓名</h3>
-        <input type="text" id="userName" placeholder="例如：张三" maxlength="10">
-        <button onclick="enter3DNav()">确认进入3D导航</button>
+        <div class="result" id="resultBox"></div>
+        <div id="mascot">
+            <img src="mascot.png" alt="吉祥物">
+        </div>
     </div>
 
-    <!-- 3D场景容器（自动生成，无需修改） -->
-    <div id="3dContainer"></div>
-
     <script>
-        // 全局变量定义（已保留）
-        let scene, camera, renderer, userInfo = null;
+        const nameInput = document.getElementById('nameInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultBox = document.getElementById('resultBox');
+        const mascot = document.getElementById('mascot');
 
-        // 姓名验证与进入3D导航（已保留）
-        function enter3DNav() {
-            const userName = document.getElementById("userName").value.trim();
-            if (!userName) {
-                alert("请输入您的姓名哦！");
+        let staffTable = {};
+        let tableCoords = {};
+
+        // 加载数据
+        async function loadData() {
+            try {
+                const [staffRes, coordsRes] = await Promise.all([
+                    fetch('staff_list.json').then(res => res.json()),
+                    fetch('table_coords.json').then(res => res.json())
+                ]);
+                staffTable = staffRes;
+                tableCoords = coordsRes;
+                showResult('数据加载完成，可以查询', 'success');
+            } catch (e) {
+                showResult('数据加载失败，请检查文件', 'error');
+            }
+        }
+
+        function resetMascot() {
+            mascot.style.left = '100px';
+            mascot.style.top = '800px';
+            resultBox.style.display = 'none';
+        }
+
+        async function searchTable() {
+            const name = nameInput.value.trim();
+            if (!name) {
+                showResult('请输入姓名', 'error');
                 return;
             }
-            userInfo = { name: userName };
-            // 隐藏姓名输入面板
-            document.getElementById("namePanel").style.display = "none";
-            // 初始化3D场景
-            init3DScene();
-            // 渲染3D场景
-            animate();
-        }
 
-        // 初始化3D场景（已保留，保证3D导航功能正常）
-        function init3DScene() {
-            // 1. 创建场景
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xf5f7fa);
-
-            // 2. 创建相机
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 2, 10);
-
-            // 3. 创建渲染器
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById("3dContainer").appendChild(renderer.domElement);
-
-            // 4. 添加辅助网格（方便查看3D场景布局）
-            const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xeeeeee);
-            scene.add(gridHelper);
-
-            // 5. 添加光源（让3D物体更有层次感）
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            directionalLight.position.set(5, 10, 7.5);
-            scene.add(directionalLight);
-
-            // 6. 添加示例物体（会场座位，演示3D导航效果）
-            const seatGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-            const seatMaterial = new THREE.MeshLambertMaterial({ color: 0x2f80ed });
-
-            // 生成一排座位
-            for (let i = -5; i <= 5; i++) {
-                const seat = new THREE.Mesh(seatGeometry, seatMaterial);
-                seat.position.set(i, 0.25, 0);
-                scene.add(seat);
+            const table = staffTable[name];
+            if (!table) {
+                showResult(`未找到「${name}」的桌号信息`, 'error');
+                resetMascot();
+                return;
             }
 
-            // 7. 窗口大小自适应
-            window.addEventListener("resize", onWindowResize);
+            const coords = tableCoords[table];
+            if (!coords) {
+                showResult(`桌号「${table}」暂无坐标`, 'error');
+                resetMascot();
+                return;
+            }
+
+            showResult(`「${name}」的桌号是：${table}`, 'success');
+            mascot.style.left = `${coords.x}px`;
+            mascot.style.top = `${coords.y}px`;
         }
 
-        // 窗口大小自适应（已保留）
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+        function showResult(text, type) {
+            resultBox.textContent = text;
+            resultBox.style.display = 'block';
+            resultBox.style.color = type === 'success' ? '#28a745' : '#dc3545';
+            setTimeout(() => {
+                resultBox.style.display = 'none';
+            }, 3000);
         }
 
-        // 渲染循环（已保留，保证3D场景动态更新）
-        function animate() {
-            requestAnimationFrame(animate);
-            // 可选：让场景缓慢旋转，增加视觉效果
-            scene.rotation.y += 0.005;
-            renderer.render(scene, camera);
-        }
+        // 绑定事件
+        searchBtn.addEventListener('click', searchTable);
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') searchTable();
+        });
+        nameInput.addEventListener('focus', resetMascot);
+
+        // 页面加载完成后加载数据
+        window.onload = loadData;
     </script>
 </body>
 </html>
