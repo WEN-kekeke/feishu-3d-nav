@@ -14,14 +14,13 @@
         body {
             position: relative;
             min-height: 100vh;
-            /* 背景图铺满整个页面，适配不同屏幕 */
             background-image: url('meeting_room.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            cursor: pointer; /* 背景添加点击光标提示 */
+            cursor: pointer;
         }
-        /* 搜索框样式：居中显示 */
+        /* 输入框固定居中，不会移位/缩小 */
         .search-box {
             position: fixed;
             top: 50%;
@@ -31,12 +30,12 @@
             padding: 20px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 100;
+            z-index: 100; /* 始终在最上层 */
             display: flex;
             flex-direction: column;
             gap: 15px;
+            width: 350px; /* 固定宽度，不会缩小 */
         }
-        /* 输入框提示文字样式 */
         .search-box label {
             font-size: 18px;
             color: #333;
@@ -47,7 +46,7 @@
             padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            width: 300px;
+            width: 100%; /* 占满输入框宽度 */
             font-size: 16px;
             outline: none;
             text-align: center;
@@ -65,16 +64,17 @@
             font-size: 16px;
             font-weight: 500;
             transition: background 0.3s;
+            width: 100%;
         }
         #searchBtn:hover {
             background: #0056b3;
         }
-        /* 结果框样式：默认居中，点击背景后固定到左上角 */
+        /* 结果框：默认居中，点击背景后固定到左上角 */
         .result {
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -60%); /* 在搜索框下方 */
+            transform: translate(-50%, -60%);
             background: rgba(255,255,255,0.95);
             padding: 15px 25px;
             border-radius: 8px;
@@ -85,14 +85,13 @@
             min-width: 300px;
             text-align: center;
         }
-        /* 结果框固定到左上角的样式 */
+        /* 结果框固定到左上角的样式（不会影响输入框） */
         .result.fixed {
             top: 20px;
             left: 20px;
             transform: none;
-            display: block !important; /* 强制显示 */
+            display: block !important;
         }
-        /* 吉祥物样式 */
         #mascot {
             position: absolute;
             left: 100px;   
@@ -101,7 +100,7 @@
             height: 60px;
             transition: all 1.5s ease;
             z-index: 50;
-            pointer-events: none; /* 不影响背景点击 */
+            pointer-events: none;
         }
         #mascot img {
             width: 100%;
@@ -112,33 +111,31 @@
 </head>
 <body onclick="fixResultBox()">
     <div class="container">
-        <!-- 搜索框：居中显示，提示语调整 -->
-        <div class="search-box">
+        <!-- 输入框：固定居中，不会移位/缩小 -->
+        <div class="search-box" id="searchBox">
             <label>请输入您的名字</label>
             <input type="text" id="nameInput" placeholder="例如：张三" autocomplete="off">
             <button id="searchBtn">查询桌号</button>
         </div>
         
-        <!-- 结果框：自定义提示语 -->
         <div class="result" id="resultBox"></div>
         
-        <!-- 吉祥物 -->
         <div id="mascot">
             <img src="mascot.png" alt="吉祥物">
         </div>
     </div>
 
     <script>
-        // 初始化元素
         const nameInput = document.getElementById('nameInput');
         const searchBtn = document.getElementById('searchBtn');
         const resultBox = document.getElementById('resultBox');
         const mascot = document.getElementById('mascot');
+        const searchBox = document.getElementById('searchBox'); // 输入框容器
 
         let staffTable = {};
         let tableCoords = {};
 
-        // 加载人员名单和坐标数据
+        // 加载数据
         async function loadData() {
             try {
                 const [staffRes, coordsRes] = await Promise.all([
@@ -147,22 +144,31 @@
                 ]);
                 staffTable = staffRes;
                 tableCoords = coordsRes;
-                // 隐藏加载提示，不干扰用户
             } catch (e) {
                 showResult('数据加载失败，请稍后重试', 'error');
             }
         }
 
-        // 重置吉祥物位置
-        function resetMascot() {
+        // 重置：输入框回到中间，吉祥物复位，结果框隐藏
+        function resetAll() {
+            // 输入框强制回到页面中间
+            searchBox.style.top = '50%';
+            searchBox.style.left = '50%';
+            searchBox.style.transform = 'translate(-50%, -50%)';
+            
+            // 吉祥物复位
             mascot.style.left = '100px';
             mascot.style.top = '800px';
-            // 移除结果框固定样式
-            resultBox.classList.remove('fixed');
+            
+            // 结果框隐藏并移除固定样式
             resultBox.style.display = 'none';
+            resultBox.classList.remove('fixed');
+            
+            // 清空输入框
+            nameInput.value = '';
         }
 
-        // 查询桌号核心逻辑
+        // 查询桌号逻辑
         async function searchTable() {
             const name = nameInput.value.trim();
             if (!name) {
@@ -170,25 +176,21 @@
                 return;
             }
 
-            // 查询桌号
             const table = staffTable[name];
             if (!table) {
                 showResult(`未找到「${name}」小伙伴的桌号信息`, 'error');
-                resetMascot();
+                resetAll();
                 return;
             }
 
-            // 查询坐标
             const coords = tableCoords[table];
             if (!coords) {
                 showResult(`「${name}」小伙伴的桌号${table}暂无坐标配置`, 'error');
-                resetMascot();
+                resetAll();
                 return;
             }
 
-            // 显示自定义提示语
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
-            // 移动吉祥物到对应桌号
             mascot.style.left = `${coords.x}px`;
             mascot.style.top = `${coords.y}px`;
         }
@@ -198,11 +200,10 @@
             resultBox.textContent = text;
             resultBox.style.display = 'block';
             resultBox.style.color = type === 'success' ? '#28a745' : '#dc3545';
-            // 移除固定样式（每次查询重新居中）
             resultBox.classList.remove('fixed');
         }
 
-        // 点击背景图，将结果框固定到左上角
+        // 点击背景：仅固定结果框到左上角，输入框不动
         function fixResultBox() {
             if (resultBox.style.display === 'block') {
                 resultBox.classList.add('fixed');
@@ -211,14 +212,17 @@
 
         // 绑定事件
         searchBtn.addEventListener('click', searchTable);
-        // 回车查询
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') searchTable();
         });
-        // 聚焦输入框时重置
-        nameInput.addEventListener('focus', resetMascot);
+        // 聚焦输入框/点击输入框时，强制重置到中间
+        nameInput.addEventListener('focus', resetAll);
+        searchBox.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止点击输入框触发背景的fixResultBox
+            resetAll();
+        });
 
-        // 页面加载完成后自动加载数据
+        // 页面加载完成后加载数据
         window.onload = loadData;
     </script>
 </body>
