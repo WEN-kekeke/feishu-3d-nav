@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>年会桌号查询</title>
     <style>
         * {
@@ -11,16 +11,19 @@
             box-sizing: border-box;
             font-family: "微软雅黑", sans-serif;
         }
+        /* 允许页面横向滚动，确保背景图完整显示 */
         body {
             position: relative;
             min-height: 100vh;
+            min-width: 1920px; /* 匹配背景图原始宽度，确保所有桌位都能显示 */
+            overflow-x: auto;
             background-image: url('meeting_room.jpg');
             background-size: cover;
-            background-position: center;
+            background-position: top center;
             background-repeat: no-repeat;
             cursor: pointer;
         }
-        /* 完整输入框：默认居中 */
+        /* 输入框：默认居中，查询后收缩到右上角 */
         .search-box {
             position: fixed;
             top: 50%;
@@ -37,7 +40,6 @@
             width: 350px;
             transition: all 0.5s ease;
         }
-        /* 查询后收缩为右上角小标识 */
         .search-box.mini {
             top: 20px;
             right: 20px;
@@ -50,13 +52,11 @@
             justify-content: center;
             align-items: center;
         }
-        /* 收缩后隐藏输入框和文字，只留图标 */
         .search-box.mini label,
         .search-box.mini #nameInput,
         .search-box.mini #searchBtn {
             display: none;
         }
-        /* 小标识的图标 */
         .mini-icon {
             display: none;
             font-size: 24px;
@@ -121,6 +121,7 @@
             transform: none;
             display: block !important;
         }
+        /* 吉祥物：百分比定位，适配所有屏幕 */
         #mascot {
             position: absolute;
             left: 8%;
@@ -161,7 +162,7 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        // 所有桌号的相对坐标（百分比），完全不受缩放影响
+        // 所有桌号的相对坐标（百分比）
         const tableCoords = {
             "1": {"x": "50%", "y": "35%"},
             "2": {"x": "58%", "y": "38%"},
@@ -221,13 +222,13 @@
             }
         }
 
-        // 收缩输入框为右上角小标识
+        // 收缩输入框
         function shrinkSearchBox() {
             searchBox.classList.add('mini');
             searchBox.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        // 展开小标识为完整输入框
+        // 展开输入框
         function expandSearchBox() {
             searchBox.classList.remove('mini');
             nameInput.focus();
@@ -238,7 +239,7 @@
             mascot.style.top = '85%';
         }
 
-        // 显示结果提示
+        // 显示结果
         function showResult(text, type) {
             resultBox.textContent = text;
             resultBox.style.display = 'block';
@@ -246,14 +247,14 @@
             resultBox.classList.remove('fixed');
         }
 
-        // 点击背景：固定结果框到左上角
+        // 点击背景固定结果框
         function fixResultBox() {
             if (resultBox.style.display === 'block') {
                 resultBox.classList.add('fixed');
             }
         }
 
-        // 核心查询逻辑
+        // 查询逻辑
         async function searchTable() {
             const name = nameInput.value.trim();
             if (!name) {
@@ -273,12 +274,9 @@
                 return;
             }
 
-            // 显示结果 + 移动吉祥物（百分比定位）
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
             mascot.style.left = coords.x;
             mascot.style.top = coords.y;
-            
-            // 查询成功后收缩输入框
             shrinkSearchBox();
         }
 
@@ -292,7 +290,7 @@
             expandSearchBox();
         });
 
-        // 页面加载完成后加载数据
+        // 加载数据
         window.onload = loadData;
     </script>
 </body>
