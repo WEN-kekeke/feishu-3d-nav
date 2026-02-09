@@ -13,16 +13,16 @@
         }
 
         /* --------------------------
-           网页端样式：完整显示背景
+           网页端样式
         -------------------------- */
         body {
             position: relative;
             min-height: 100vh;
-            min-width: 1920px; /* 保证背景完整宽度，显示45桌 */
+            min-width: 1920px;
             overflow-x: auto;
             overflow-y: auto;
             background-image: url('meeting_room.jpg');
-            background-size: contain; /* 完整显示，不裁剪 */
+            background-size: contain;
             background-position: top center;
             background-repeat: no-repeat;
         }
@@ -133,7 +133,7 @@
             display: block !important;
         }
 
-        /* 吉祥物：百分比定位（核心） */
+        /* 吉祥物：百分比定位 */
         #mascot {
             position: absolute;
             left: 8%;
@@ -143,7 +143,7 @@
             transition: all 1.5s ease;
             z-index: 50;
             pointer-events: none;
-            transform-origin: center center; /* 缩放时不偏移 */
+            transform-origin: center center;
         }
 
         #mascot img {
@@ -153,45 +153,49 @@
         }
 
         /* --------------------------
-           移动端专属样式：居中缩放
+           移动端专属样式
         -------------------------- */
         @media (max-width: 767px) {
             body {
                 min-width: auto;
                 background: none;
                 display: flex;
-                justify-content: center;
-                align-items: flex-start;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                padding-top: 20px;
             }
 
-            /* 背景图容器：居中显示，适配屏幕宽度 */
+            /* 背景图容器：居中显示 */
             .bg-container {
                 position: relative;
                 width: 100%;
-                padding: 10px 0;
                 display: flex;
                 justify-content: center;
+                margin-bottom: 20px;
             }
 
             .bg-image {
                 display: block;
-                width: 100%; /* 等于手机屏幕宽度 */
+                width: 100%;
                 height: auto;
                 object-fit: contain;
-                touch-action: pinch-zoom; /* 支持缩放 */
+                touch-action: pinch-zoom;
             }
 
-            /* 输入框：手机端也保留收缩功能 */
+            /* 输入框：手机端上移，不再居中 */
             .search-box {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
                 width: 90%;
                 max-width: 350px;
+                margin: 0 auto;
             }
 
             .search-box.mini {
+                position: fixed;
                 top: 20px;
                 right: 20px;
                 left: auto;
@@ -225,7 +229,7 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        // 桌号百分比定位（精准适配所有屏幕）
+        // 桌号百分比定位
         const tableCoords = {
             "1": {"x": "50%", "y": "35%"},
             "2": {"x": "58%", "y": "38%"},
@@ -271,7 +275,7 @@
             "42": {"x": "35%", "y": "80%"},
             "43": {"x": "55%", "y": "80%"},
             "44": {"x": "78%", "y": "80%"},
-            "45": {"x": "95%", "y": "80%"} // 45桌精准百分比定位
+            "45": {"x": "95%", "y": "80%"}
         };
 
         // 加载人员名单
@@ -291,10 +295,14 @@
             searchBox.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        // 展开输入框到中间
+        // 展开输入框
         function expandSearchBox() {
             searchBox.classList.remove('mini');
-            searchBox.style.transform = 'translate(-50%, -50%)';
+            if (window.innerWidth >= 768) {
+                searchBox.style.transform = 'translate(-50%, -50%)';
+            } else {
+                searchBox.style.transform = 'none';
+            }
             nameInput.focus();
             nameInput.value = '';
             resultBox.style.display = 'none';
@@ -318,7 +326,7 @@
             }
         }
 
-        // 查询逻辑（百分比定位核心）
+        // 查询逻辑
         async function searchTable() {
             const name = nameInput.value.trim();
             if (!name) {
@@ -339,7 +347,6 @@
             }
 
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
-            // 百分比定位（适配所有屏幕）
             mascot.style.left = coords.x;
             mascot.style.top = coords.y;
             shrinkSearchBox();
@@ -355,7 +362,7 @@
             expandSearchBox();
         });
 
-        // 页面加载：网页端自动居中背景
+        // 页面加载
         window.onload = () => {
             loadData();
             if (window.innerWidth >= 768) {
