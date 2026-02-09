@@ -13,19 +13,21 @@
         }
 
         /* --------------------------
-           网页端样式（无任何变化）
+           网页端样式：完整显示背景
         -------------------------- */
         body {
             position: relative;
             min-height: 100vh;
+            min-width: 1920px; /* 保证背景完整宽度，显示45桌 */
+            overflow-x: auto;
+            overflow-y: auto;
             background-image: url('meeting_room.jpg');
-            background-size: cover;
-            background-position: center;
+            background-size: contain; /* 完整显示，不裁剪 */
+            background-position: top center;
             background-repeat: no-repeat;
-            overflow: auto;
         }
 
-        /* 输入框：网页端固定居中 */
+        /* 输入框：默认居中，查询后收缩到右上角 */
         .search-box {
             position: fixed;
             top: 50%;
@@ -41,6 +43,36 @@
             gap: 15px;
             width: 350px;
             transition: all 0.5s ease;
+        }
+
+        .search-box.mini {
+            top: 20px;
+            right: 20px;
+            left: auto;
+            transform: none;
+            width: 60px;
+            height: 60px;
+            padding: 0;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-box.mini label,
+        .search-box.mini #nameInput,
+        .search-box.mini #searchBtn {
+            display: none;
+        }
+
+        .mini-icon {
+            display: none;
+            font-size: 24px;
+            color: #007bff;
+            cursor: pointer;
+        }
+
+        .search-box.mini .mini-icon {
+            display: block;
         }
 
         .search-box label {
@@ -101,7 +133,7 @@
             display: block !important;
         }
 
-        /* 吉祥物：相对定位 */
+        /* 吉祥物：百分比定位（核心） */
         #mascot {
             position: absolute;
             left: 8%;
@@ -111,6 +143,7 @@
             transition: all 1.5s ease;
             z-index: 50;
             pointer-events: none;
+            transform-origin: center center; /* 缩放时不偏移 */
         }
 
         #mascot img {
@@ -120,34 +153,35 @@
         }
 
         /* --------------------------
-           移动端专属样式
+           移动端专属样式：居中缩放
         -------------------------- */
         @media (max-width: 767px) {
             body {
+                min-width: auto;
                 background: none;
-                overflow-x: hidden;
-                overflow-y: auto;
                 display: flex;
                 justify-content: center;
                 align-items: flex-start;
             }
 
-            /* 背景图容器：手机端适配宽度，支持缩放 */
+            /* 背景图容器：居中显示，适配屏幕宽度 */
             .bg-container {
                 position: relative;
                 width: 100%;
                 padding: 10px 0;
+                display: flex;
+                justify-content: center;
             }
 
             .bg-image {
                 display: block;
-                width: 100%; /* 宽度等于手机屏幕 */
+                width: 100%; /* 等于手机屏幕宽度 */
                 height: auto;
                 object-fit: contain;
-                touch-action: pinch-zoom;
+                touch-action: pinch-zoom; /* 支持缩放 */
             }
 
-            /* 输入框：手机端也固定居中 */
+            /* 输入框：手机端也保留收缩功能 */
             .search-box {
                 position: fixed;
                 top: 50%;
@@ -155,6 +189,12 @@
                 transform: translate(-50%, -50%);
                 width: 90%;
                 max-width: 350px;
+            }
+
+            .search-box.mini {
+                top: 20px;
+                right: 20px;
+                left: auto;
             }
         }
     </style>
@@ -166,6 +206,7 @@
     </div>
 
     <div class="search-box" id="searchBox">
+        <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
         <label>请输入您的名字</label>
         <input type="text" id="nameInput" placeholder="例如：张三" autocomplete="off">
         <button id="searchBtn">查询桌号</button>
@@ -182,8 +223,9 @@
         const searchBtn = document.getElementById('searchBtn');
         const resultBox = document.getElementById('resultBox');
         const mascot = document.getElementById('mascot');
+        const searchBox = document.getElementById('searchBox');
 
-        // 桌号百分比坐标
+        // 桌号百分比定位（精准适配所有屏幕）
         const tableCoords = {
             "1": {"x": "50%", "y": "35%"},
             "2": {"x": "58%", "y": "38%"},
@@ -229,7 +271,7 @@
             "42": {"x": "35%", "y": "80%"},
             "43": {"x": "55%", "y": "80%"},
             "44": {"x": "78%", "y": "80%"},
-            "45": {"x": "95%", "y": "80%"}
+            "45": {"x": "95%", "y": "80%"} // 45桌精准百分比定位
         };
 
         // 加载人员名单
@@ -241,6 +283,24 @@
             } catch (e) {
                 showResult('数据加载失败，请稍后重试', 'error');
             }
+        }
+
+        // 收缩输入框到右上角
+        function shrinkSearchBox() {
+            searchBox.classList.add('mini');
+            searchBox.addEventListener('click', (e) => e.stopPropagation());
+        }
+
+        // 展开输入框到中间
+        function expandSearchBox() {
+            searchBox.classList.remove('mini');
+            searchBox.style.transform = 'translate(-50%, -50%)';
+            nameInput.focus();
+            nameInput.value = '';
+            resultBox.style.display = 'none';
+            resultBox.classList.remove('fixed');
+            mascot.style.left = '8%';
+            mascot.style.top = '85%';
         }
 
         // 显示结果
@@ -258,7 +318,7 @@
             }
         }
 
-        // 查询逻辑
+        // 查询逻辑（百分比定位核心）
         async function searchTable() {
             const name = nameInput.value.trim();
             if (!name) {
@@ -279,8 +339,10 @@
             }
 
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
+            // 百分比定位（适配所有屏幕）
             mascot.style.left = coords.x;
             mascot.style.top = coords.y;
+            shrinkSearchBox();
         }
 
         // 绑定事件
@@ -288,9 +350,21 @@
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') searchTable();
         });
+        document.querySelector('.mini-icon').addEventListener('click', (e) => {
+            e.stopPropagation();
+            expandSearchBox();
+        });
 
-        // 加载数据
-        window.onload = loadData;
+        // 页面加载：网页端自动居中背景
+        window.onload = () => {
+            loadData();
+            if (window.innerWidth >= 768) {
+                window.scrollTo({
+                    left: (document.body.scrollWidth - window.innerWidth) / 2,
+                    behavior: 'smooth'
+                });
+            }
+        };
     </script>
 </body>
 </html>
