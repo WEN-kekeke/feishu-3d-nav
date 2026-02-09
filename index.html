@@ -2,7 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- 禁用飞书/微信等客户端的强制适配 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.5, maximum-scale=2.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <!-- 禁止飞书自动识别和适配 -->
+    <meta name="feishu-transformer" content="disable">
     <title>年会桌号查询</title>
     <style>
         * {
@@ -14,34 +20,30 @@
         body {
             position: relative;
             min-height: 100vh;
-            overflow: hidden; /* 隐藏页面滚动条 */
-            touch-action: manipulation; /* 优化移动端触摸体验 */
+            overflow-x: auto;
+            overflow-y: auto;
+            touch-action: pan-x pan-y pinch-zoom;
+            background: #f5f5f5;
         }
-        /* 背景图容器：支持滑动、缩放，限制边界 */
+        /* 背景图容器：确保原始尺寸显示 */
         .bg-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto; /* 允许滑动 */
-            -webkit-overflow-scrolling: touch; /* 移动端顺滑滚动 */
+            position: relative;
+            width: 1920px; /* 背景图原始宽度 */
+            height: 1080px; /* 背景图原始高度 */
+            margin: 0 auto;
+            overflow: hidden;
         }
-        /* 背景图：自适应容器宽度，初始显示全景 */
         .bg-image {
             display: block;
-            width: 100%; /* 适配手机宽度，显示全景 */
-            height: auto;
-            min-height: 100vh;
-            object-fit: contain; /* 保证图片完整显示，不裁剪 */
-            touch-action: pinch-zoom; /* 支持手指缩放 */
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
-        /* 输入框：默认居中，查询后收缩到右上角 */
+        /* 输入框：固定在右上角，避免被遮挡 */
         .search-box {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 20px;
+            right: 20px;
             background: rgba(255,255,255,0.95);
             padding: 20px 30px;
             border-radius: 12px;
@@ -51,14 +53,10 @@
             flex-direction: column;
             gap: 15px;
             width: 350px;
-            max-width: 90%; /* 适配手机宽度 */
+            max-width: 90%;
             transition: all 0.5s ease;
         }
         .search-box.mini {
-            top: 20px;
-            right: 20px;
-            left: auto;
-            transform: none;
             width: 60px;
             height: 60px;
             padding: 0;
@@ -113,12 +111,10 @@
         #searchBtn:hover {
             background: #0056b3;
         }
-        /* 结果框：默认居中，点击背景后固定到左上角 */
         .result {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -60%);
+            top: 20px;
+            left: 20px;
             background: rgba(255,255,255,0.95);
             padding: 15px 25px;
             border-radius: 8px;
@@ -127,26 +123,18 @@
             z-index: 99;
             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             min-width: 300px;
-            max-width: 80%; /* 适配手机宽度 */
+            max-width: 80%;
             text-align: center;
         }
-        .result.fixed {
-            top: 20px;
-            left: 20px;
-            transform: none;
-            display: block !important;
-        }
-        /* 吉祥物：基于背景图的相对定位，适配缩放/滑动 */
         #mascot {
             position: absolute;
-            left: 8%;
-            top: 85%;
+            left: 50%;
+            top: 35%;
             width: 60px;
             height: 60px;
             transition: all 1.5s ease;
             z-index: 50;
             pointer-events: none;
-            transform-origin: center center; /* 缩放时以中心为原点 */
         }
         #mascot img {
             width: 100%;
@@ -156,25 +144,21 @@
     </style>
 </head>
 <body>
-    <!-- 背景图容器：支持滑动、缩放 -->
-    <div class="bg-container" onclick="fixResultBox()">
+    <div class="bg-container">
         <img src="meeting_room.jpg" class="bg-image" alt="年会会场图">
-    </div>
-
-    <div class="container">
-        <div class="search-box" id="searchBox">
-            <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
-            <label>请输入您的名字</label>
-            <input type="text" id="nameInput" placeholder="例如：张三" autocomplete="off">
-            <button id="searchBtn">查询桌号</button>
-        </div>
-        
-        <div class="result" id="resultBox"></div>
-        
         <div id="mascot">
             <img src="mascot.png" alt="吉祥物">
         </div>
     </div>
+
+    <div class="search-box" id="searchBox">
+        <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
+        <label>请输入您的名字</label>
+        <input type="text" id="nameInput" placeholder="例如：张三" autocomplete="off">
+        <button id="searchBtn">查询桌号</button>
+    </div>
+    
+    <div class="result" id="resultBox"></div>
 
     <script>
         const nameInput = document.getElementById('nameInput');
@@ -182,56 +166,54 @@
         const resultBox = document.getElementById('resultBox');
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
-        const bgContainer = document.querySelector('.bg-container');
-        const bgImage = document.querySelector('.bg-image');
 
-        // 所有桌号的相对坐标（百分比），适配缩放/滑动
+        // 桌号坐标（基于原始1920x1080图片）
         const tableCoords = {
-            "1": {"x": "50%", "y": "35%"},
-            "2": {"x": "58%", "y": "38%"},
-            "3": {"x": "57%", "y": "42%"},
-            "4": {"x": "35%", "y": "38%"},
-            "5": {"x": "36%", "y": "42%"},
-            "6": {"x": "28%", "y": "34%"},
-            "7": {"x": "26%", "y": "38%"},
-            "8": {"x": "66%", "y": "34%"},
-            "9": {"x": "68%", "y": "38%"},
-            "10": {"x": "70%", "y": "42%"},
-            "11": {"x": "62%", "y": "46%"},
-            "12": {"x": "51%", "y": "46%"},
-            "13": {"x": "38%", "y": "46%"},
-            "14": {"x": "30%", "y": "46%"},
-            "15": {"x": "22%", "y": "46%"},
-            "16": {"x": "20%", "y": "52%"},
-            "17": {"x": "30%", "y": "52%"},
-            "18": {"x": "38%", "y": "52%"},
-            "19": {"x": "51%", "y": "52%"},
-            "20": {"x": "62%", "y": "52%"},
-            "21": {"x": "70%", "y": "52%"},
-            "22": {"x": "78%", "y": "58%"},
-            "23": {"x": "68%", "y": "58%"},
-            "24": {"x": "55%", "y": "58%"},
-            "25": {"x": "38%", "y": "58%"},
-            "26": {"x": "30%", "y": "58%"},
-            "27": {"x": "19%", "y": "58%"},
-            "28": {"x": "10%", "y": "58%"},
-            "29": {"x": "25%", "y": "64%"},
-            "30": {"x": "35%", "y": "64%"},
-            "31": {"x": "51%", "y": "64%"},
-            "32": {"x": "68%", "y": "64%"},
-            "33": {"x": "78%", "y": "64%"},
-            "34": {"x": "90%", "y": "70%"},
-            "35": {"x": "76%", "y": "70%"},
-            "36": {"x": "55%", "y": "70%"},
-            "37": {"x": "38%", "y": "70%"},
-            "38": {"x": "20%", "y": "70%"},
-            "39": {"x": "10%", "y": "70%"},
-            "40": {"x": "2%", "y": "70%"},
-            "41": {"x": "18%", "y": "80%"},
-            "42": {"x": "35%", "y": "80%"},
-            "43": {"x": "55%", "y": "80%"},
-            "44": {"x": "78%", "y": "80%"},
-            "45": {"x": "95%", "y": "80%"}
+            "1": {"x": 960, "y": 378},
+            "2": {"x": 1113, "y": 410},
+            "3": {"x": 1094, "y": 453},
+            "4": {"x": 672, "y": 410},
+            "5": {"x": 691, "y": 453},
+            "6": {"x": 537, "y": 367},
+            "7": {"x": 499, "y": 410},
+            "8": {"x": 1267, "y": 367},
+            "9": {"x": 1296, "y": 410},
+            "10": {"x": 1315, "y": 453},
+            "11": {"x": 1190, "y": 496},
+            "12": {"x": 980, "y": 496},
+            "13": {"x": 739, "y": 496},
+            "14": {"x": 576, "y": 496},
+            "15": {"x": 422, "y": 496},
+            "16": {"x": 384, "y": 561},
+            "17": {"x": 576, "y": 561},
+            "18": {"x": 739, "y": 561},
+            "19": {"x": 980, "y": 561},
+            "20": {"x": 1190, "y": 561},
+            "21": {"x": 1315, "y": 561},
+            "22": {"x": 1497, "y": 626},
+            "23": {"x": 1296, "y": 626},
+            "24": {"x": 1065, "y": 626},
+            "25": {"x": 739, "y": 626},
+            "26": {"x": 576, "y": 626},
+            "27": {"x": 364, "y": 626},
+            "28": {"x": 192, "y": 626},
+            "29": {"x": 480, "y": 691},
+            "30": {"x": 672, "y": 691},
+            "31": {"x": 980, "y": 691},
+            "32": {"x": 1296, "y": 691},
+            "33": {"x": 1497, "y": 691},
+            "34": {"x": 1728, "y": 756},
+            "35": {"x": 1478, "y": 756},
+            "36": {"x": 1065, "y": 756},
+            "37": {"x": 739, "y": 756},
+            "38": {"x": 384, "y": 756},
+            "39": {"x": 192, "y": 756},
+            "40": {"x": 38, "y": 756},
+            "41": {"x": 345, "y": 864},
+            "42": {"x": 672, "y": 864},
+            "43": {"x": 1065, "y": 864},
+            "44": {"x": 1497, "y": 864},
+            "45": {"x": 1824, "y": 864}
         };
 
         // 加载人员名单
@@ -245,39 +227,25 @@
             }
         }
 
-        // 收缩输入框
         function shrinkSearchBox() {
             searchBox.classList.add('mini');
-            searchBox.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        // 展开输入框
         function expandSearchBox() {
             searchBox.classList.remove('mini');
             nameInput.focus();
             nameInput.value = '';
             resultBox.style.display = 'none';
-            resultBox.classList.remove('fixed');
-            mascot.style.left = '8%';
-            mascot.style.top = '85%';
+            mascot.style.left = '50%';
+            mascot.style.top = '35%';
         }
 
-        // 显示结果
         function showResult(text, type) {
             resultBox.textContent = text;
             resultBox.style.display = 'block';
             resultBox.style.color = type === 'success' ? '#28a745' : '#dc3545';
-            resultBox.classList.remove('fixed');
         }
 
-        // 点击背景固定结果框
-        function fixResultBox() {
-            if (resultBox.style.display === 'block') {
-                resultBox.classList.add('fixed');
-            }
-        }
-
-        // 查询逻辑
         async function searchTable() {
             const name = nameInput.value.trim();
             if (!name) {
@@ -298,23 +266,9 @@
             }
 
             showResult(`亲爱的${name}小伙伴，您座位的桌号为${table}`, 'success');
-            mascot.style.left = coords.x;
-            mascot.style.top = coords.y;
+            mascot.style.left = `${coords.x}px`;
+            mascot.style.top = `${coords.y}px`;
             shrinkSearchBox();
-        }
-
-        // 限制滑动范围：仅在背景图内滑动
-        function limitScroll() {
-            const containerWidth = bgContainer.clientWidth;
-            const imageWidth = bgImage.offsetWidth;
-            
-            // 水平滑动限制：不超出背景图左右边界
-            if (bgContainer.scrollLeft < 0) {
-                bgContainer.scrollLeft = 0;
-            }
-            if (bgContainer.scrollLeft > imageWidth - containerWidth) {
-                bgContainer.scrollLeft = imageWidth - containerWidth;
-            }
         }
 
         // 绑定事件
@@ -322,19 +276,10 @@
         nameInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') searchTable();
         });
-        document.querySelector('.mini-icon').addEventListener('click', (e) => {
-            e.stopPropagation();
-            expandSearchBox();
-        });
-        // 监听滑动，限制边界
-        bgContainer.addEventListener('scroll', limitScroll);
+        document.querySelector('.mini-icon').addEventListener('click', expandSearchBox);
 
         // 加载数据
-        window.onload = () => {
-            loadData();
-            // 初始显示全景：滚动到背景图中间
-            bgContainer.scrollLeft = (bgImage.offsetWidth - bgContainer.clientWidth) / 2;
-        };
+        window.onload = loadData;
     </script>
 </body>
 </html>
