@@ -124,7 +124,7 @@
             text-align: center;
         }
 
-        /* 吉祥物：百分比定位（精准适配所有桌号） */
+        /* 吉祥物：网页端正常尺寸，手机端缩小到1/2 */
         #mascot {
             position: absolute;
             left: 50%;
@@ -183,7 +183,7 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                margin-top: 80px; /* 上移背景图，让显示更居中 */
+                margin-top: 80px; /* 上移背景图，显示更居中 */
                 overflow: auto;
                 touch-action: pan-x pan-y pinch-zoom;
             }
@@ -194,6 +194,12 @@
                 height: auto;
                 max-height: 90vh;
                 object-fit: contain;
+            }
+
+            /* 手机端吉祥物缩小到1/2（30px*30px），适配桌号大小 */
+            #mascot {
+                width: 30px;
+                height: 30px;
             }
         }
     </style>
