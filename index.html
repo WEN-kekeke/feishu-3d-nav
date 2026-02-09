@@ -11,17 +11,30 @@
             box-sizing: border-box;
             font-family: "微软雅黑", sans-serif;
         }
-        /* 允许页面横向滚动，确保背景图完整显示 */
         body {
             position: relative;
             min-height: 100vh;
-            min-width: 1920px; /* 匹配背景图原始宽度，确保所有桌位都能显示 */
-            overflow-x: auto;
-            background-image: url('meeting_room.jpg');
-            background-size: cover;
-            background-position: top center;
-            background-repeat: no-repeat;
-            cursor: pointer;
+            overflow: hidden; /* 隐藏页面滚动条 */
+            touch-action: manipulation; /* 优化移动端触摸体验 */
+        }
+        /* 背景图容器：支持滑动、缩放，限制边界 */
+        .bg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* 允许滑动 */
+            -webkit-overflow-scrolling: touch; /* 移动端顺滑滚动 */
+        }
+        /* 背景图：自适应容器宽度，初始显示全景 */
+        .bg-image {
+            display: block;
+            width: 100%; /* 适配手机宽度，显示全景 */
+            height: auto;
+            min-height: 100vh;
+            object-fit: contain; /* 保证图片完整显示，不裁剪 */
+            touch-action: pinch-zoom; /* 支持手指缩放 */
         }
         /* 输入框：默认居中，查询后收缩到右上角 */
         .search-box {
@@ -38,6 +51,7 @@
             flex-direction: column;
             gap: 15px;
             width: 350px;
+            max-width: 90%; /* 适配手机宽度 */
             transition: all 0.5s ease;
         }
         .search-box.mini {
@@ -113,6 +127,7 @@
             z-index: 99;
             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             min-width: 300px;
+            max-width: 80%; /* 适配手机宽度 */
             text-align: center;
         }
         .result.fixed {
@@ -121,7 +136,7 @@
             transform: none;
             display: block !important;
         }
-        /* 吉祥物：百分比定位，适配所有屏幕 */
+        /* 吉祥物：基于背景图的相对定位，适配缩放/滑动 */
         #mascot {
             position: absolute;
             left: 8%;
@@ -131,6 +146,7 @@
             transition: all 1.5s ease;
             z-index: 50;
             pointer-events: none;
+            transform-origin: center center; /* 缩放时以中心为原点 */
         }
         #mascot img {
             width: 100%;
@@ -139,7 +155,12 @@
         }
     </style>
 </head>
-<body onclick="fixResultBox()">
+<body>
+    <!-- 背景图容器：支持滑动、缩放 -->
+    <div class="bg-container" onclick="fixResultBox()">
+        <img src="meeting_room.jpg" class="bg-image" alt="年会会场图">
+    </div>
+
     <div class="container">
         <div class="search-box" id="searchBox">
             <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
@@ -161,8 +182,10 @@
         const resultBox = document.getElementById('resultBox');
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
+        const bgContainer = document.querySelector('.bg-container');
+        const bgImage = document.querySelector('.bg-image');
 
-        // 所有桌号的相对坐标（百分比）
+        // 所有桌号的相对坐标（百分比），适配缩放/滑动
         const tableCoords = {
             "1": {"x": "50%", "y": "35%"},
             "2": {"x": "58%", "y": "38%"},
@@ -280,6 +303,20 @@
             shrinkSearchBox();
         }
 
+        // 限制滑动范围：仅在背景图内滑动
+        function limitScroll() {
+            const containerWidth = bgContainer.clientWidth;
+            const imageWidth = bgImage.offsetWidth;
+            
+            // 水平滑动限制：不超出背景图左右边界
+            if (bgContainer.scrollLeft < 0) {
+                bgContainer.scrollLeft = 0;
+            }
+            if (bgContainer.scrollLeft > imageWidth - containerWidth) {
+                bgContainer.scrollLeft = imageWidth - containerWidth;
+            }
+        }
+
         // 绑定事件
         searchBtn.addEventListener('click', searchTable);
         nameInput.addEventListener('keydown', (e) => {
@@ -289,9 +326,15 @@
             e.stopPropagation();
             expandSearchBox();
         });
+        // 监听滑动，限制边界
+        bgContainer.addEventListener('scroll', limitScroll);
 
         // 加载数据
-        window.onload = loadData;
+        window.onload = () => {
+            loadData();
+            // 初始显示全景：滚动到背景图中间
+            bgContainer.scrollLeft = (bgImage.offsetWidth - bgContainer.clientWidth) / 2;
+        };
     </script>
 </body>
 </html>
