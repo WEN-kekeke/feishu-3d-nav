@@ -13,16 +13,16 @@
         }
 
         /* --------------------------
-           网页端样式：完整显示39桌，无裁剪、可自适应
+           网页端样式：固定背景，无滑动
         -------------------------- */
         body {
             position: relative;
             min-height: 100vh;
-            /* 取消overflow:hidden，修复背景显示不全；改为contain完整显示背景 */
-            overflow: auto;
+            /* 核心：禁止滑动，背景固定 */
+            overflow: hidden;
             background-image: url('meeting_room.jpg');
-            background-size: contain;
-            background-position: top center;
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
         }
 
@@ -32,7 +32,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,0.95);
             padding: 20px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -114,7 +114,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,0.95);
             padding: 15px 25px;
             border-radius: 8px;
             font-size: 20px;
@@ -125,10 +125,9 @@
             text-align: center;
         }
 
-        /* 吉祥物：百分比定位（核心校准，适配39桌实际位置） */
+        /* 吉祥物：网页端正常尺寸，手机端缩小到1/2 */
         #mascot {
             position: absolute;
-            /* 初始位置不影响，查询后会覆盖 */
             left: 50%;
             top: 40%;
             width: 60px;
@@ -136,7 +135,6 @@
             transition: all 1.5s ease;
             z-index: 50;
             pointer-events: none;
-            /* 确保以自身中心定位，不偏移 */
             transform: translate(-50%, -50%);
         }
 
@@ -147,7 +145,7 @@
         }
 
         /* --------------------------
-           移动端专属样式（保留所有已实现功能）
+           移动端专属样式
         -------------------------- */
         @media (max-width: 767px) {
             body {
@@ -178,7 +176,7 @@
                 transform: none;
             }
 
-            /* 背景图容器：居中显示，支持缩放后滑动，上移优化居中 */
+            /* 背景图容器：居中显示，支持缩放后滑动 */
             .bg-container {
                 position: relative;
                 width: 100%;
@@ -199,7 +197,7 @@
                 object-fit: contain;
             }
 
-            /* 手机端吉祥物缩小到1/2，适配桌号大小 */
+            /* 手机端吉祥物缩小到1/2（30px*30px），适配桌号大小 */
             #mascot {
                 width: 30px;
                 height: 30px;
@@ -233,7 +231,7 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        // 【核心更新】1-39桌精准百分比坐标（逐桌匹配截图实际位置）
+        // 【核心更新】1-39桌精准百分比坐标（双端通用，适配截图）
         const tableCoords = {
             "1":  {"x": "57%", "y": "40%"},  // 舞台正前方1号桌
             "2":  {"x": "66%", "y": "38%"},
