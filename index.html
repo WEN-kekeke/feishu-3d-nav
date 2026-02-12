@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.5, maximum-scale=2.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>年会桌号查询</title>
     <style>
         * {
@@ -12,15 +12,15 @@
             font-family: "微软雅黑", sans-serif;
         }
 
-        /* 网页端样式：固定背景，无滑动，完整显示所有桌号 */
+        /* 网页端样式：固定背景，无滑动，无缩放 */
         body {
             position: relative;
             min-height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* 禁止滑动 */
             background-image: url('meeting_room.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-size: cover; /* 覆盖整个视口 */
+            background-position: center; /* 居中显示 */
+            background-repeat: no-repeat; /* 不重复 */
         }
 
         /* 输入框：默认居中，查询后收缩到右上角 */
