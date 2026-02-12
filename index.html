@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.5, maximum-scale=2.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>年会桌号查询</title>
     <style>
         * {
@@ -13,17 +13,17 @@
         }
 
         /* --------------------------
-           网页端样式：完整显示40桌背景图，无滑动
+           网页端样式：完整显示40桌背景图，无滑动、无缩放
         -------------------------- */
         body {
             position: relative;
             min-height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* 禁止页面滑动 */
             background-image: url('meeting_room.jpg');
-            background-size: contain; /* 核心：完整显示背景图，不裁剪 */
+            background-size: contain; /* 核心：完整显示整张背景图，不裁剪 */
             background-position: center center; /* 水平+垂直居中 */
             background-repeat: no-repeat;
-            background-color: #f5f5f5; /* 填充空白区域 */
+            background-color: #f5f5f5; /* 填充空白区域，使页面更美观 */
         }
 
         /* 输入框：默认居中，查询后收缩到右上角 */
@@ -231,7 +231,7 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        // 【核心替换】1-40桌精准百分比坐标（完全使用你提供的版本）
+        // 适配第二张图片（40桌）的精准百分比坐标
         const tableCoords = {
             "1":  {"x": "50%", "y": "35%"},
             "2":  {"x": "59%", "y": "35%"},
