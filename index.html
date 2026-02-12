@@ -13,17 +13,34 @@
         }
 
         /* --------------------------
-           网页端样式：完整显示40桌背景图，无滑动、无缩放
+           网页端样式：强制完整显示40桌背景图
         -------------------------- */
         body {
             position: relative;
-            min-height: 100vh;
-            overflow: hidden; /* 禁止页面滑动 */
-            background-image: url('meeting_room.jpg');
-            background-size: contain; /* 核心：完整显示整张背景图，不裁剪 */
-            background-position: center center; /* 水平+垂直居中 */
-            background-repeat: no-repeat;
-            background-color: #f5f5f5; /* 填充空白区域，使页面更美观 */
+            width: 100vw;  /* 宽度等于视口宽度 */
+            height: 100vh; /* 高度等于视口高度 */
+            overflow: hidden; /* 彻底禁止所有滑动 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+        }
+
+        /* 核心：背景图容器 - 确保图片完整显示 */
+        .web-bg-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .web-bg-image {
+            max-width: 100%;  /* 最大宽度不超过容器 */
+            max-height: 100%; /* 最大高度不超过容器 */
+            object-fit: contain; /* 强制完整显示，不裁剪 */
         }
 
         /* 输入框：默认居中，查询后收缩到右上角 */
@@ -36,7 +53,7 @@
             padding: 20px 30px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 100;
+            z-index: 100; /* 层级高于背景图 */
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -145,9 +162,14 @@
         }
 
         /* --------------------------
-           移动端专属样式（完全保留原有逻辑）
+           移动端专属样式（保留原有逻辑）
         -------------------------- */
         @media (max-width: 767px) {
+            /* 隐藏网页端背景容器 */
+            .web-bg-container {
+                display: none;
+            }
+
             body {
                 background: none;
                 display: flex;
@@ -203,9 +225,21 @@
                 height: 30px;
             }
         }
+
+        /* 网页端隐藏移动端背景容器 */
+        @media (min-width: 768px) {
+            .bg-container {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body onclick="fixResultBox()">
+    <!-- 网页端专属背景容器（强制完整显示40桌图） -->
+    <div class="web-bg-container">
+        <img src="meeting_room.jpg" class="web-bg-image" alt="年会40桌会场图">
+    </div>
+
     <!-- 输入框（双端通用） -->
     <div class="search-box" id="searchBox">
         <span class="mini-icon" onclick="expandSearchBox()">🔍</span>
@@ -214,7 +248,7 @@
         <button id="searchBtn">查询桌号</button>
     </div>
 
-    <!-- 背景图容器（手机端专用） -->
+    <!-- 移动端专属背景容器 -->
     <div class="bg-container">
         <img src="meeting_room.jpg" class="bg-image" alt="年会会场图">
     </div>
@@ -231,7 +265,7 @@
         const mascot = document.getElementById('mascot');
         const searchBox = document.getElementById('searchBox');
 
-        // 适配第二张图片（40桌）的精准百分比坐标
+        // 40桌精准百分比坐标（适配完整背景图）
         const tableCoords = {
             "1":  {"x": "50%", "y": "35%"},
             "2":  {"x": "59%", "y": "35%"},
